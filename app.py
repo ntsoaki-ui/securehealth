@@ -1,3 +1,8 @@
+import os
+from dotenv import load_dotenv  # Add this import at the top
+
+load_dotenv()  # Load environment variables
+
 from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for, flash
 import json
 import datetime
@@ -6,12 +11,12 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import base64
-import os
 import hashlib
 import re
 
 app = Flask(__name__)
-app.secret_key = 'healthcare-secret-key-2024'
+# Use environment variable for secret key in production
+app.secret_key = os.environ.get('SECRET_KEY', 'healthcare-secret-key-2024')
 
 # ==================== IN-MEMORY DATA STORAGE ====================
 users = []
@@ -2296,10 +2301,14 @@ def debug_data():
     return jsonify(data_summary)
 
 # ==================== START THE APPLICATION ====================
-if __name__ == '__main__':
+def create_app():
     print("🚀 Starting SecureHealth Lesotho Application...")
     print("🔄 Initializing in-memory data storage...")
     initialize_data()
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
     print("🌐 Server running on http://localhost:5000")
     print("\n🔐 Password Requirements:")
     print("   - At least 8 characters")
@@ -2319,4 +2328,5 @@ if __name__ == '__main__':
     print("   👤 Patient: patient_lerato / Patient456!")
     print("   👤 Patient: patient_thabiso / Patient789!")
     print("\n🔗 Open your browser and go to: http://localhost:5000")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
