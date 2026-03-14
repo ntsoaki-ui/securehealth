@@ -25,6 +25,12 @@ appointments = []
 medical_records = []
 consent_records = []
 prescriptions = []
+pending_approvals = []  # Store users pending admin approval
+
+# ==================== PENDING APPROVAL STATUS ====================
+PENDING = "pending"
+APPROVED = "approved"
+REJECTED = "rejected"
 
 # ==================== PASSWORD VALIDATION ====================
 def validate_password(password):
@@ -56,7 +62,7 @@ def validate_password(password):
 # ==================== INITIAL DATA SETUP ====================
 def initialize_data():
     """Initialize in-memory data storage with sample users and data"""
-    global users, patients, appointments, medical_records, consent_records, prescriptions
+    global users, patients, appointments, medical_records, consent_records, prescriptions, pending_approvals
     
     # Clear any existing data
     users.clear()
@@ -65,36 +71,39 @@ def initialize_data():
     medical_records.clear()
     consent_records.clear()
     prescriptions.clear()
+    pending_approvals.clear()
     
     # Create user IDs counter
     user_id_counter = 1
     patient_id_counter = 1
     appointment_id_counter = 1
     
-    # ==================== ADMIN ACCOUNTS (2 hardcoded) ====================
+    # ==================== ADMIN ACCOUNTS (2 hardcoded - already approved) ====================
     admins = [
         {
             'id': user_id_counter, 
-            'username': 'admin',
+            'username': 'adminmaster',
             'email': 'admin@healthcenter.org',
-            'password': 'Admin123!',
+            'password': 'AdminMaster2024!',
             'role': 'admin',
             'first_name': 'System',
             'last_name': 'Administrator',
             'phone': '26650000001',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         },
         {
             'id': user_id_counter + 1,
-            'username': 'sysadmin',
-            'email': 'sysadmin@healthcenter.org',
-            'password': 'Admin456!',
+            'username': 'superadmin',
+            'email': 'superadmin@healthcenter.org',
+            'password': 'SuperAdmin2024!',
             'role': 'admin',
             'first_name': 'Data',
             'last_name': 'Manager',
             'phone': '26650000002',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
     ]
@@ -103,7 +112,7 @@ def initialize_data():
         users.append(admin)
     user_id_counter += 2
     
-    # ==================== DOCTORS (3 hardcoded) ====================
+    # ==================== DOCTORS (3 hardcoded - already approved) ====================
     doctors = [
         {
             'id': user_id_counter,
@@ -116,6 +125,7 @@ def initialize_data():
             'phone': '26650123456',
             'specialization': 'General Medicine',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         },
         {
@@ -129,6 +139,7 @@ def initialize_data():
             'phone': '26650234567',
             'specialization': 'Pediatrics',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         },
         {
@@ -142,6 +153,7 @@ def initialize_data():
             'phone': '26650345678',
             'specialization': 'Cardiology',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
     ]
@@ -150,7 +162,7 @@ def initialize_data():
         users.append(doctor)
     user_id_counter += 3
     
-    # ==================== NURSES (2 hardcoded) ====================
+    # ==================== NURSES (2 hardcoded - already approved) ====================
     nurses = [
         {
             'id': user_id_counter,
@@ -162,6 +174,7 @@ def initialize_data():
             'last_name': 'Letsie',
             'phone': '26650456789',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         },
         {
@@ -174,6 +187,7 @@ def initialize_data():
             'last_name': 'Mokhothu',
             'phone': '26650567890',
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
     ]
@@ -182,7 +196,7 @@ def initialize_data():
         users.append(nurse)
     user_id_counter += 2
     
-    # ==================== PATIENTS (3 hardcoded) ====================
+    # ==================== PATIENTS (3 hardcoded - already approved) ====================
     patients_data = [
         {
             'username': 'patient_tlali',
@@ -243,6 +257,7 @@ def initialize_data():
             'last_name': patient_data['last_name'],
             'phone': patient_data['phone'],
             'is_active': True,
+            'approval_status': APPROVED,
             'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         users.append(user)
@@ -374,21 +389,73 @@ def initialize_data():
             consent['consent_data']
         )
     
-    print(f"✅ Data initialized successfully!")
-    print(f"   👥 Users: {len(users)} total")
-    print(f"   👑 Admins: {len([u for u in users if u['role'] == 'admin'])}")
-    print(f"   👨‍⚕️  Doctors: {len([u for u in users if u['role'] == 'doctor'])}")
-    print(f"   👩‍⚕️  Nurses: {len([u for u in users if u['role'] == 'nurse'])}")
-    print(f"   👤 Patients: {len([u for u in users if u['role'] == 'patient'])}")
-    print(f"   📅 Appointments: {len(appointments)}")
-    print(f"   📋 Medical Records: {len(medical_records)}")
-    print(f"   ✅ Consent Records: {len(consent_records)}")
+    # ==================== SAMPLE PENDING APPROVALS ====================
+    sample_pending = [
+        {
+            'id': user_id_counter,
+            'username': 'dr_pending',
+            'email': 'dr.pending@example.com',
+            'password': 'DoctorPending123!',
+            'role': 'doctor',
+            'first_name': 'Pending',
+            'last_name': 'Doctor',
+            'phone': '26650901234',
+            'specialization': 'Neurology',
+            'is_active': False,
+            'approval_status': PENDING,
+            'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        },
+        {
+            'id': user_id_counter + 1,
+            'username': 'nurse_pending',
+            'email': 'nurse.pending@example.com',
+            'password': 'NursePending123!',
+            'role': 'nurse',
+            'first_name': 'Pending',
+            'last_name': 'Nurse',
+            'phone': '26650912345',
+            'is_active': False,
+            'approval_status': PENDING,
+            'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        },
+        {
+            'id': user_id_counter + 2,
+            'username': 'patient_pending',
+            'email': 'patient.pending@example.com',
+            'password': 'PatientPending123!',
+            'role': 'patient',
+            'first_name': 'Pending',
+            'last_name': 'Patient',
+            'phone': '26650923456',
+            'date_of_birth': '1990-01-01',
+            'gender': 'male',
+            'is_active': False,
+            'approval_status': PENDING,
+            'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+    ]
+    
+    for pending in sample_pending:
+        users.append(pending)
+        pending_approvals.append(pending['id'])
+        user_id_counter += 1
+    
+    print(" Data initialized successfully!")
+    print(f" Users: {len(users)} total")
+    print(f" Admins: {len([u for u in users if u['role'] == 'admin'])}")
+    print(f" Doctors: {len([u for u in users if u['role'] == 'doctor' and u['approval_status'] == APPROVED])} (approved)")
+    print(f" Nurses: {len([u for u in users if u['role'] == 'nurse' and u['approval_status'] == APPROVED])} (approved)")
+    print(f" Patients: {len([u for u in users if u['role'] == 'patient' and u['approval_status'] == APPROVED])} (approved)")
+    print(f" Pending Approvals: {len(pending_approvals)}")
+    print(f" Appointments: {len(appointments)}")
+    print(f" Medical Records: {len(medical_records)}")
+    print(f" Consent Records: {len(consent_records)}")
     
     return True
 
 # ==================== USER REGISTRATION ====================
-def register_user(username, email, password, role, first_name, last_name, phone):
-    """Register a new user"""
+def register_user(username, email, password, role, first_name, last_name, phone, additional_data=None):
+    """Register a new user - sets approval_status to PENDING"""
     
     # Check if username already exists
     for user in users:
@@ -406,9 +473,9 @@ def register_user(username, email, password, role, first_name, last_name, phone)
         return False, message
     
     # Create new user ID
-    user_id = len(users) + 1
+    user_id = max([u['id'] for u in users]) + 1 if users else 1
     
-    # Create new user
+    # Create new user with pending approval status
     new_user = {
         'id': user_id,
         'username': username,
@@ -418,31 +485,33 @@ def register_user(username, email, password, role, first_name, last_name, phone)
         'first_name': first_name,
         'last_name': last_name,
         'phone': phone,
-        'is_active': True,
+        'is_active': False,
+        'approval_status': PENDING,
         'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     
-    # Add user-specific fields based on role
-    if role == 'doctor':
-        new_user['specialization'] = request.form.get('specialization', 'General Medicine')
-    elif role == 'patient':
+    # Add role-specific fields
+    if role == 'doctor' and additional_data:
+        new_user['specialization'] = additional_data.get('specialization', 'General Medicine')
+    elif role == 'patient' and additional_data:
         # Create patient record
-        patient_id = len(patients) + 1
+        patient_id = max([p['id'] for p in patients]) + 1 if patients else 1
         patients.append({
             'id': patient_id,
             'user_id': user_id,
-            'date_of_birth': request.form.get('date_of_birth', '1990-01-01'),
-            'gender': request.form.get('gender', 'male'),
-            'blood_type': request.form.get('blood_type', 'Unknown'),
-            'allergies': request.form.get('allergies', 'None'),
-            'emergency_contact': request.form.get('emergency_contact', ''),
-            'address': request.form.get('address', ''),
-            'medical_history': request.form.get('medical_history', '')
+            'date_of_birth': additional_data.get('date_of_birth', '1990-01-01'),
+            'gender': additional_data.get('gender', 'male'),
+            'blood_type': additional_data.get('blood_type', 'Unknown'),
+            'allergies': additional_data.get('allergies', 'None'),
+            'emergency_contact': additional_data.get('emergency_contact', ''),
+            'address': additional_data.get('address', ''),
+            'medical_history': additional_data.get('medical_history', '')
         })
     
     users.append(new_user)
+    pending_approvals.append(user_id)
     
-    return True, "Registration successful"
+    return True, "Registration successful. Your account is pending admin approval. You will be able to login once approved."
 
 # ==================== PASSWORD AUTHENTICATION ====================
 def check_user_password(username, password):
@@ -452,18 +521,17 @@ def check_user_password(username, password):
         return True
     return False
 
-# ==================== DATA HELPER FUNCTIONS ====================
 def find_user_by_username(username):
-    """Find user by username"""
+    """Find user by username - only return if approved"""
     for user in users:
-        if user['username'] == username and user['is_active']:
+        if user['username'] == username:
             return user
     return None
 
 def find_user_by_id(user_id):
     """Find user by ID"""
     for user in users:
-        if user['id'] == user_id and user['is_active']:
+        if user['id'] == user_id:
             return user
     return None
 
@@ -516,11 +584,11 @@ def get_all_appointments():
     return all_appointments
 
 def get_all_patients():
-    """Get all patients with user details"""
+    """Get all patients with user details (approved only)"""
     all_patients = []
     for patient in patients:
         user = find_user_by_id(patient['user_id'])
-        if user:
+        if user and user['approval_status'] == APPROVED:
             patient_copy = patient.copy()
             patient_copy['first_name'] = user['first_name']
             patient_copy['last_name'] = user['last_name']
@@ -531,18 +599,18 @@ def get_all_patients():
     return all_patients
 
 def get_patient_users():
-    """Get all patient users"""
+    """Get all patient users (approved only)"""
     patient_users = []
     for user in users:
-        if user['role'] == 'patient' and user['is_active']:
+        if user['role'] == 'patient' and user['approval_status'] == APPROVED:
             patient_users.append(user)
     return patient_users
 
 def get_doctor_users():
-    """Get all doctor users"""
+    """Get all doctor users (approved only)"""
     doctor_users = []
     for user in users:
-        if user['role'] == 'doctor' and user['is_active']:
+        if user['role'] == 'doctor' and user['approval_status'] == APPROVED:
             doctor_users.append(user)
     return doctor_users
 
@@ -641,6 +709,79 @@ def get_all_consents():
     
     return all_consents
 
+def get_pending_users():
+    """Get all users pending approval"""
+    pending = []
+    for user_id in pending_approvals:
+        user = find_user_by_id(user_id)
+        if user:
+            pending.append(user)
+    return pending
+
+def approve_user(user_id):
+    """Approve a pending user"""
+    global pending_approvals
+    user = find_user_by_id(user_id)
+    if user and user['approval_status'] == PENDING:
+        user['approval_status'] = APPROVED
+        user['is_active'] = True
+        if user_id in pending_approvals:
+            pending_approvals.remove(user_id)
+        return True
+    return False
+
+def reject_user(user_id):
+    """Reject a pending user"""
+    global pending_approvals, users
+    user = find_user_by_id(user_id)
+    if user and user['approval_status'] == PENDING:
+        user['approval_status'] = REJECTED
+        user['is_active'] = False
+        if user_id in pending_approvals:
+            pending_approvals.remove(user_id)
+        return True
+    return False
+
+def delete_user(user_id):
+    """Delete a user (admin only)"""
+    global users, pending_approvals, patients
+    for i, user in enumerate(users):
+        if user['id'] == user_id:
+            # Remove from pending if present
+            if user_id in pending_approvals:
+                pending_approvals.remove(user_id)
+            
+            # Remove patient record if patient
+            if user['role'] == 'patient':
+                patients[:] = [p for p in patients if p['user_id'] != user_id]
+            
+            # Remove user
+            users.pop(i)
+            return True
+    return False
+
+def get_login_history():
+    """Get login history (simulated)"""
+    login_history = []
+    for user in users:
+        if user['approval_status'] == APPROVED:
+            login_history.append({
+                'user_id': user['id'],
+                'username': user['username'],
+                'full_name': f"{user['first_name']} {user['last_name']}",
+                'role': user['role'],
+                'last_login': user.get('last_login', 'Never'),
+                'login_count': user.get('login_count', 0)
+            })
+    return login_history
+
+def record_login(user_id):
+    """Record user login"""
+    user = find_user_by_id(user_id)
+    if user:
+        user['last_login'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        user['login_count'] = user.get('login_count', 0) + 1
+
 # ==================== ENCRYPTION FUNCTIONS ====================
 def encrypt_data(plaintext, key):
     """Encrypt sensitive data using AES"""
@@ -688,10 +829,13 @@ def render_page(content, title="Secure Health Data Management"):
             .status-completed {{ background-color: #d4edda; color: #155724; }}
             .status-cancelled {{ background-color: #f8d7da; color: #721c24; }}
             .status-scheduled {{ background-color: #d1ecf1; color: #0c5460; }}
-            .demo-creds {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; }}
-            .demo-creds h6 {{ font-weight: bold; }}
+            .pending-badge {{ background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 5px; }}
+            .approved-badge {{ background-color: #28a745; color: #fff; padding: 5px 10px; border-radius: 5px; }}
+            .rejected-badge {{ background-color: #dc3545; color: #fff; padding: 5px 10px; border-radius: 5px; }}
+            .demo-creds {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; display: none; }}
             .password-rules {{ font-size: 0.85rem; }}
             .password-strength {{ height: 5px; margin-top: 5px; }}
+            .admin-badge {{ background-color: #6f42c1; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem; }}
         </style>
     </head>
     <body>
@@ -702,10 +846,17 @@ def render_page(content, title="Secure Health Data Management"):
     '''.format(title)
     
     if session.get('user_id'):
-        base_template += '''
+        user = find_user_by_id(session['user_id'])
+        if user and user['approval_status'] == APPROVED:
+            base_template += '''
                     <span class="navbar-text me-3">Welcome, {0} ({1})</span>
                     <a class="nav-link" href="/logout">Logout</a>
-        '''.format(session.get('name', 'User'), session.get('role', 'user'))
+            '''.format(session.get('name', 'User'), session.get('role', 'user'))
+        else:
+            base_template += '''
+                    <span class="navbar-text me-3">Welcome, {0}</span>
+                    <a class="nav-link" href="/logout">Logout</a>
+            '''.format(session.get('name', 'User'))
     else:
         base_template += '''
                     <a class="nav-link" href="/login">Login</a>
@@ -721,28 +872,44 @@ def render_page(content, title="Secure Health Data Management"):
     '''
     
     if session.get('user_id'):
-        base_template += '''
+        user = find_user_by_id(session['user_id'])
+        if user and user['approval_status'] == APPROVED:
+            base_template += '''
                 <div class="col-md-2 sidebar p-3">
                     <div class="list-group">
                         <a href="/dashboard" class="list-group-item list-group-item-action"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        '''
-        if session.get('role') == 'patient':
-            base_template += '''
+            '''
+            if session.get('role') == 'patient':
+                base_template += '''
                         <a href="/my_appointments" class="list-group-item list-group-item-action"><i class="fas fa-calendar-check"></i> My Appointments</a>
                         <a href="/book_appointment" class="list-group-item list-group-item-action"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
-            '''
-        elif session.get('role') in ['doctor', 'nurse', 'admin']:
-            base_template += '''
+                '''
+            elif session.get('role') in ['doctor', 'nurse']:
+                base_template += '''
                         <a href="/patients" class="list-group-item list-group-item-action"><i class="fas fa-users"></i> Patients</a>
                         <a href="/appointments" class="list-group-item list-group-item-action"><i class="fas fa-calendar-alt"></i> Appointments</a>
                         <a href="/add_medical_record" class="list-group-item list-group-item-action"><i class="fas fa-file-medical"></i> Add Record</a>
-            '''
-        base_template += '''
+                '''
+            elif session.get('role') == 'admin':
+                base_template += '''
+                        <a href="/admin/dashboard" class="list-group-item list-group-item-action"><i class="fas fa-user-shield"></i> Admin Dashboard</a>
+                        <a href="/admin/pending" class="list-group-item list-group-item-action"><i class="fas fa-clock"></i> Pending Approvals</a>
+                        <a href="/admin/users" class="list-group-item list-group-item-action"><i class="fas fa-users-cog"></i> Manage Users</a>
+                        <a href="/admin/login-history" class="list-group-item list-group-item-action"><i class="fas fa-history"></i> Login History</a>
+                        <a href="/patients" class="list-group-item list-group-item-action"><i class="fas fa-users"></i> Patients</a>
+                        <a href="/appointments" class="list-group-item list-group-item-action"><i class="fas fa-calendar-alt"></i> Appointments</a>
+                        <a href="/add_medical_record" class="list-group-item list-group-item-action"><i class="fas fa-file-medical"></i> Add Record</a>
+                '''
+            base_template += '''
                         <a href="/consent" class="list-group-item list-group-item-action"><i class="fas fa-clipboard-check"></i> Consent</a>
                     </div>
                 </div>
                 <div class="col-md-10 main-content">
-        '''
+            '''
+        else:
+            base_template += '''
+                <div class="col-12">
+            '''
     else:
         base_template += '''
                 <div class="col-12">
@@ -778,7 +945,7 @@ def render_page(content, title="Secure Health Data Management"):
 # ==================== PAGE CONTENT TEMPLATES ====================
 
 def get_login_content():
-    """Get login content with registration link"""
+    """Get login content - no admin credentials shown"""
     content = '''
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
@@ -808,43 +975,10 @@ def get_login_content():
                     </a>
                 </div>
                 
-                <div class="demo-creds p-3 mt-4">
-                    <h6 class="text-center mb-3"><i class="fas fa-info-circle"></i> Demo Credentials</h6>
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="p-2">
-                                <div class="bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="fas fa-user-shield text-primary"></i>
-                                </div>
-                                <h6 class="mt-2">Admin</h6>
-                                <p class="small mb-0">admin / Admin123!</p>
-                                <p class="small">sysadmin / Admin456!</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-2">
-                                <div class="bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="fas fa-user-md text-info"></i>
-                                </div>
-                                <h6 class="mt-2">Doctors</h6>
-                                <p class="small mb-0">dr_thabo / Doctor123!</p>
-                                <p class="small">dr_masechaba / Doctor456!</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-2">
-                                <div class="bg-white text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="fas fa-user-injured text-success"></i>
-                                </div>
-                                <h6 class="mt-2">Patients</h6>
-                                <p class="small mb-0">patient_tlali / Patient123!</p>
-                                <p class="small">patient_lerato / Patient456!</p>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-center mt-3 mb-0 small">
-                        <i class="fas fa-shield-alt"></i> HIPAA/GDPR Compliant Healthcare System
-                    </p>
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> New accounts require admin approval before you can login.
+                    </small>
                 </div>
                 
                 <div class="mt-3 text-center">
@@ -984,11 +1118,11 @@ def get_register_content():
                                 <div class="password-rules text-muted">
                                     <small>Password must contain:</small>
                                     <ul class="mb-1">
-                                        <li id="rule-length">✓ At least 8 characters</li>
-                                        <li id="rule-upper">✓ One uppercase letter</li>
-                                        <li id="rule-lower">✓ One lowercase letter</li>
-                                        <li id="rule-digit">✓ One digit</li>
-                                        <li id="rule-special">✓ One special character</li>
+                                        <li id="rule-length"> At least 8 characters</li>
+                                        <li id="rule-upper"> One uppercase letter</li>
+                                        <li id="rule-lower"> One lowercase letter</li>
+                                        <li id="rule-digit"> One digit</li>
+                                        <li id="rule-special"> One special character</li>
                                     </ul>
                                 </div>
                                 <div class="password-strength">
@@ -1013,6 +1147,10 @@ def get_register_content():
                         <label class="form-check-label" for="terms">
                             I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
                         </label>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> After registration, your account will be pending admin approval. You will receive an email once approved.
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-between">
@@ -1105,50 +1243,50 @@ function checkPasswordStrength() {
     // Length check
     if (password.length >= 8) {
         strength += 20;
-        document.getElementById('rule-length').innerHTML = '✓ At least 8 characters';
+        document.getElementById('rule-length').innerHTML = ' At least 8 characters';
         document.getElementById('rule-length').style.color = 'green';
     } else {
-        document.getElementById('rule-length').innerHTML = '✗ At least 8 characters';
+        document.getElementById('rule-length').innerHTML = ' At least 8 characters';
         document.getElementById('rule-length').style.color = 'red';
     }
     
     // Upper case check
     if (/[A-Z]/.test(password)) {
         strength += 20;
-        document.getElementById('rule-upper').innerHTML = '✓ One uppercase letter';
+        document.getElementById('rule-upper').innerHTML = ' One uppercase letter';
         document.getElementById('rule-upper').style.color = 'green';
     } else {
-        document.getElementById('rule-upper').innerHTML = '✗ One uppercase letter';
+        document.getElementById('rule-upper').innerHTML = ' One uppercase letter';
         document.getElementById('rule-upper').style.color = 'red';
     }
     
     // Lower case check
     if (/[a-z]/.test(password)) {
         strength += 20;
-        document.getElementById('rule-lower').innerHTML = '✓ One lowercase letter';
+        document.getElementById('rule-lower').innerHTML = ' One lowercase letter';
         document.getElementById('rule-lower').style.color = 'green';
     } else {
-        document.getElementById('rule-lower').innerHTML = '✗ One lowercase letter';
+        document.getElementById('rule-lower').innerHTML = ' One lowercase letter';
         document.getElementById('rule-lower').style.color = 'red';
     }
     
     // Digit check
     if (/\\d/.test(password)) {
         strength += 20;
-        document.getElementById('rule-digit').innerHTML = '✓ One digit';
+        document.getElementById('rule-digit').innerHTML = ' One digit';
         document.getElementById('rule-digit').style.color = 'green';
     } else {
-        document.getElementById('rule-digit').innerHTML = '✗ One digit';
+        document.getElementById('rule-digit').innerHTML = ' One digit';
         document.getElementById('rule-digit').style.color = 'red';
     }
     
     // Special character check
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         strength += 20;
-        document.getElementById('rule-special').innerHTML = '✓ One special character';
+        document.getElementById('rule-special').innerHTML = ' One special character';
         document.getElementById('rule-special').style.color = 'green';
     } else {
-        document.getElementById('rule-special').innerHTML = '✗ One special character';
+        document.getElementById('rule-special').innerHTML = ' One special character';
         document.getElementById('rule-special').style.color = 'red';
     }
     
@@ -1175,10 +1313,10 @@ function checkPasswordMatch() {
         matchDiv.innerHTML = '';
         matchDiv.style.color = '';
     } else if (password === confirm) {
-        matchDiv.innerHTML = '✓ Passwords match';
+        matchDiv.innerHTML = ' Passwords match';
         matchDiv.style.color = 'green';
     } else {
-        matchDiv.innerHTML = '✗ Passwords do not match';
+        matchDiv.innerHTML = ' Passwords do not match';
         matchDiv.style.color = 'red';
     }
 }
@@ -1212,6 +1350,375 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
 });
 </script>
 '''
+    
+    return content
+
+def get_pending_approval_content():
+    """Content for users with pending approval"""
+    content = '''
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h4 class="card-title text-center mb-0"><i class="fas fa-clock"></i> Account Pending Approval</h4>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-user-clock fa-4x text-warning mb-3"></i>
+                <h5>Your account is pending admin approval</h5>
+                <p class="text-muted">
+                    Thank you for registering. An administrator will review your account shortly.
+                    You will be able to login once your account is approved.
+                </p>
+                <p>If you have any questions, please contact the system administrator.</p>
+                <a href="/logout" class="btn btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+'''
+    return content
+
+def get_admin_dashboard_content():
+    """Admin dashboard content"""
+    pending_count = len(pending_approvals)
+    approved_count = len([u for u in users if u['approval_status'] == APPROVED])
+    total_users = len(users)
+    
+    content = f'''
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-users fa-2x"></i></h5>
+                <h3>{total_users}</h3>
+                <h6>Total Users</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-check-circle fa-2x"></i></h5>
+                <h3>{approved_count}</h3>
+                <h6>Approved Users</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-clock fa-2x"></i></h5>
+                <h3>{pending_count}</h3>
+                <h6>Pending Approval</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info h-100">
+            <div class="card-body text-center">
+                <h5><i class="fas fa-calendar-alt fa-2x"></i></h5>
+                <h3>{len(appointments)}</h3>
+                <h6>Appointments</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-tasks"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/admin/pending" class="btn btn-warning">
+                        <i class="fas fa-clock"></i> Review Pending Approvals ({pending_count})
+                    </a>
+                    <a href="/admin/users" class="btn btn-primary">
+                        <i class="fas fa-users-cog"></i> Manage Users
+                    </a>
+                    <a href="/admin/login-history" class="btn btn-info">
+                        <i class="fas fa-history"></i> View Login History
+                    </a>
+                    <a href="/user-credentials" class="btn btn-secondary">
+                        <i class="fas fa-key"></i> View All Credentials
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle"></i> Admin Credentials</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Admin Login Credentials:</strong></p>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-shield text-primary"></i> adminmaster</span>
+                        <span class="badge bg-primary">Password: AdminMaster2024!</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-shield text-primary"></i> superadmin</span>
+                        <span class="badge bg-primary">Password: SuperAdmin2024!</span>
+                    </li>
+                </ul>
+                <p class="mt-3 small text-muted">
+                    <i class="fas fa-info-circle"></i> These are the only admin accounts. Use these to manage the system.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+'''
+    return content
+
+def get_pending_users_content():
+    """Content for pending user approvals"""
+    pending_users = get_pending_users()
+    
+    content = '''
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-clock"></i> Pending Approvals</h1>
+</div>
+'''
+    
+    if pending_users:
+        content += '''
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="fas fa-user-clock"></i> Users Awaiting Approval</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+        '''
+        
+        for user in pending_users:
+            full_name = f"{user['first_name']} {user['last_name']}"
+            role_badge = {
+                'doctor': 'bg-info',
+                'nurse': 'bg-warning',
+                'patient': 'bg-success'
+            }.get(user['role'], 'bg-secondary')
+            
+            content += f'''
+                    <tr>
+                        <td>{user['id']}</td>
+                        <td><strong>{user['username']}</strong></td>
+                        <td>{full_name}</td>
+                        <td>{user['email']}</td>
+                        <td>{user.get('phone', 'N/A')}</td>
+                        <td><span class="badge {role_badge}">{user['role'].title()}</span></td>
+                        <td>{user.get('created_at', 'Unknown')}</td>
+                        <td>
+                            <a href="/admin/approve/{user['id']}" class="btn btn-sm btn-success" onclick="return confirm('Approve this user?')">
+                                <i class="fas fa-check"></i> Approve
+                            </a>
+                            <a href="/admin/reject/{user['id']}" class="btn btn-sm btn-danger" onclick="return confirm('Reject this user?')">
+                                <i class="fas fa-times"></i> Reject
+                            </a>
+                        </td>
+                    </tr>
+            '''
+        
+        content += '''
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+        '''
+    else:
+        content += '''
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+        <h4>No Pending Approvals</h4>
+        <p class="text-muted">All user registrations have been processed.</p>
+    </div>
+</div>
+        '''
+    
+    return content
+
+def get_manage_users_content():
+    """Content for managing all users"""
+    all_users = sorted(users, key=lambda x: (x['role'], x['username']))
+    
+    content = '''
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-users-cog"></i> Manage Users</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="fas fa-list"></i> All Users</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                        <th>Last Login</th>
+                        <th>Login Count</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+    '''
+    
+    for user in all_users:
+        full_name = f"{user['first_name']} {user['last_name']}"
+        role_badge = {
+            'admin': 'bg-danger',
+            'doctor': 'bg-info',
+            'nurse': 'bg-warning',
+            'patient': 'bg-success'
+        }.get(user['role'], 'bg-secondary')
+        
+        status_badge = 'bg-success' if user['approval_status'] == APPROVED else ('bg-warning' if user['approval_status'] == PENDING else 'bg-danger')
+        
+        content += f'''
+                    <tr>
+                        <td>{user['id']}</td>
+                        <td><strong>{user['username']}</strong></td>
+                        <td>{full_name}</td>
+                        <td>{user['email']}</td>
+                        <td><span class="badge {role_badge}">{user['role'].title()}</span></td>
+                        <td><span class="badge {status_badge}">{user['approval_status'].title()}</span></td>
+                        <td>{user.get('created_at', 'Unknown')}</td>
+                        <td>{user.get('last_login', 'Never')}</td>
+                        <td><span class="badge bg-secondary">{user.get('login_count', 0)}</span></td>
+                        <td>
+        '''
+        
+        # Don't allow admin to delete other admins
+        if user['role'] != 'admin':
+            if user['approval_status'] == APPROVED:
+                content += f'''
+                            <a href="/admin/deactivate/{user['id']}" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this user?')">
+                                <i class="fas fa-ban"></i> Deactivate
+                            </a>
+                '''
+            elif user['approval_status'] == PENDING:
+                content += f'''
+                            <a href="/admin/approve/{user['id']}" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Approve
+                            </a>
+                            <a href="/admin/reject/{user['id']}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-times"></i> Reject
+                            </a>
+                '''
+            
+            content += f'''
+                            <a href="/admin/delete/{user['id']}" class="btn btn-sm btn-danger" onclick="return confirm('Permanently delete this user? This action cannot be undone.')">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+            '''
+        else:
+            content += '''
+                            <span class="text-muted">Protected Admin</span>
+            '''
+        
+        content += '''
+                        </td>
+                    </tr>
+        '''
+    
+    content += '''
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    '''
+    
+    return content
+
+def get_login_history_content():
+    """Content for login history"""
+    login_history = get_login_history()
+    
+    content = '''
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2"><i class="fas fa-history"></i> Login History</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0"><i class="fas fa-sign-in-alt"></i> User Login Activity</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th>Login Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+    '''
+    
+    for entry in login_history:
+        role_badge = {
+            'admin': 'bg-danger',
+            'doctor': 'bg-info',
+            'nurse': 'bg-warning',
+            'patient': 'bg-success'
+        }.get(entry['role'], 'bg-secondary')
+        
+        content += f'''
+                    <tr>
+                        <td>{entry['user_id']}</td>
+                        <td><strong>{entry['username']}</strong></td>
+                        <td>{entry['full_name']}</td>
+                        <td><span class="badge {role_badge}">{entry['role'].title()}</span></td>
+                        <td>{entry['last_login']}</td>
+                        <td><span class="badge bg-secondary">{entry['login_count']}</span></td>
+                    </tr>
+        '''
+    
+    content += '''
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    '''
     
     return content
 
@@ -1286,7 +1793,7 @@ def get_dashboard_content():
                                         <i class="fas fa-calendar-check"></i> My Appointments
                                     </a>
         '''
-    elif session.get('role') in ['doctor', 'nurse', 'admin']:
+    elif session.get('role') in ['doctor', 'nurse']:
         content += '''
                                     <a href="/patients" class="btn btn-outline-primary">
                                         <i class="fas fa-users"></i> View Patients
@@ -1880,7 +2387,11 @@ def get_consent_content(patient_users, consent_records_list):
 @app.route('/')
 def index():
     if 'user_id' in session:
-        return redirect('/dashboard')
+        user = find_user_by_id(session['user_id'])
+        if user and user['approval_status'] == APPROVED:
+            return redirect('/dashboard')
+        elif user and user['approval_status'] == PENDING:
+            return render_template_string(render_page(get_pending_approval_content(), "Pending Approval"))
     return render_template_string(render_page(get_login_content(), "Login - SecureHealth Lesotho"))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -1892,12 +2403,20 @@ def login():
         user = find_user_by_username(username)
         
         if user and check_user_password(username, password):
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['role'] = user['role']
-            session['name'] = f"{user['first_name']} {user['last_name']}"
-            flash('Login successful! Welcome to SecureHealth Lesotho.', 'success')
-            return redirect('/dashboard')
+            if user['approval_status'] == APPROVED:
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['role'] = user['role']
+                session['name'] = f"{user['first_name']} {user['last_name']}"
+                record_login(user['id'])
+                flash('Login successful! Welcome to SecureHealth Lesotho.', 'success')
+                return redirect('/dashboard')
+            elif user['approval_status'] == PENDING:
+                flash('Your account is pending admin approval. Please wait for an administrator to approve your account.', 'warning')
+                return render_template_string(render_page(get_login_content(), "Login - SecureHealth Lesotho"))
+            else:
+                flash('Your account has been rejected. Please contact administrator.', 'error')
+                return render_template_string(render_page(get_login_content(), "Login - SecureHealth Lesotho"))
         else:
             if not user:
                 flash('User not found. Please check your username or register for a new account.', 'error')
@@ -1940,11 +2459,21 @@ def register():
             flash('You must agree to the Terms of Service and Privacy Policy.', 'error')
             return redirect('/register')
         
+        # Collect additional data based on role
+        additional_data = {}
+        if role == 'doctor':
+            additional_data['specialization'] = request.form.get('specialization', 'General Medicine')
+        elif role == 'patient':
+            additional_data['date_of_birth'] = request.form.get('date_of_birth')
+            additional_data['gender'] = request.form.get('gender')
+            additional_data['blood_type'] = request.form.get('blood_type')
+            additional_data['allergies'] = request.form.get('allergies')
+        
         # Register the user
-        success, message = register_user(username, email, password, role, first_name, last_name, phone)
+        success, message = register_user(username, email, password, role, first_name, last_name, phone, additional_data)
         
         if success:
-            flash('Registration successful! You can now login with your credentials.', 'success')
+            flash(message, 'success')
             return redirect('/login')
         else:
             flash(f'Registration failed: {message}', 'error')
@@ -1956,7 +2485,103 @@ def register():
 def dashboard():
     if 'user_id' not in session:
         return redirect('/login')
+    
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
+    
     return render_template_string(render_page(get_dashboard_content(), "Dashboard"))
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    return render_template_string(render_page(get_admin_dashboard_content(), "Admin Dashboard"))
+
+@app.route('/admin/pending')
+def admin_pending():
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    return render_template_string(render_page(get_pending_users_content(), "Pending Approvals"))
+
+@app.route('/admin/users')
+def admin_users():
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    return render_template_string(render_page(get_manage_users_content(), "Manage Users"))
+
+@app.route('/admin/login-history')
+def admin_login_history():
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    return render_template_string(render_page(get_login_history_content(), "Login History"))
+
+@app.route('/admin/approve/<int:user_id>')
+def admin_approve(user_id):
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    if approve_user(user_id):
+        flash(f'User {user_id} has been approved successfully.', 'success')
+    else:
+        flash(f'Error approving user {user_id}.', 'error')
+    
+    return redirect('/admin/pending')
+
+@app.route('/admin/reject/<int:user_id>')
+def admin_reject(user_id):
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    if reject_user(user_id):
+        flash(f'User {user_id} has been rejected.', 'success')
+    else:
+        flash(f'Error rejecting user {user_id}.', 'error')
+    
+    return redirect('/admin/pending')
+
+@app.route('/admin/delete/<int:user_id>')
+def admin_delete(user_id):
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    user = find_user_by_id(user_id)
+    if user and user['role'] == 'admin':
+        flash('Cannot delete admin accounts.', 'error')
+        return redirect('/admin/users')
+    
+    if delete_user(user_id):
+        flash(f'User {user_id} has been permanently deleted.', 'success')
+    else:
+        flash(f'Error deleting user {user_id}.', 'error')
+    
+    return redirect('/admin/users')
+
+@app.route('/admin/deactivate/<int:user_id>')
+def admin_deactivate(user_id):
+    if 'user_id' not in session or session['role'] != 'admin':
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect('/dashboard')
+    
+    user = find_user_by_id(user_id)
+    if user:
+        user['is_active'] = False
+        flash(f'User {user_id} has been deactivated.', 'success')
+    else:
+        flash(f'Error deactivating user {user_id}.', 'error')
+    
+    return redirect('/admin/users')
 
 @app.route('/patients')
 def patients_route():
@@ -2008,6 +2633,10 @@ def consent_route():
     if 'user_id' not in session:
         return redirect('/login')
     
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
+    
     if request.method == 'POST':
         consent_type = request.form['consent_type']
         consent_given = 'consent_given' in request.form
@@ -2055,6 +2684,10 @@ def book_appointment_route():
         flash('Access denied. Only patients can book appointments.', 'error')
         return redirect('/dashboard')
     
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
+    
     if request.method == 'POST':
         doctor_id = int(request.form['doctor_id'])
         appointment_date = request.form['appointment_date']
@@ -2097,6 +2730,10 @@ def my_appointments_route():
         flash('Access denied. Only patients can view their appointments.', 'error')
         return redirect('/dashboard')
     
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
+    
     # Get patient
     patient = find_patient_by_user_id(session['user_id'])
     
@@ -2114,6 +2751,10 @@ def appointments_route():
         flash('Access denied. You need staff privileges to view appointments.', 'error')
         return redirect('/dashboard')
     
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
+    
     all_appointments = get_all_appointments()
     return render_template_string(render_page(get_appointments_content(all_appointments, session['role']), "All Appointments"))
 
@@ -2121,6 +2762,10 @@ def appointments_route():
 def update_appointment_status(appointment_id, action):
     if 'user_id' not in session:
         return redirect('/login')
+    
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return redirect('/')
     
     valid_actions = ['approve', 'reject', 'complete', 'cancel']
     if action not in valid_actions:
@@ -2184,6 +2829,10 @@ def api_patient_prescriptions(patient_user_id):
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401
     
+    user = find_user_by_id(session['user_id'])
+    if not user or user['approval_status'] != APPROVED:
+        return jsonify({'error': 'Account not approved'}), 403
+    
     # Find patient
     patient = find_patient_by_user_id(patient_user_id)
     if not patient:
@@ -2205,7 +2854,7 @@ def api_patient_prescriptions(patient_user_id):
     
     return jsonify(patient_prescriptions)
 
-# Route to display all usernames and passwords
+# Route to display all usernames (admin only)
 @app.route('/user-credentials')
 def user_credentials():
     if 'user_id' not in session or session['role'] != 'admin':
@@ -2230,6 +2879,7 @@ def user_credentials():
                             <th>Username</th>
                             <th>Email</th>
                             <th>Full Name</th>
+                            <th>Status</th>
                             <th>Registered</th>
                         </tr>
                     </thead>
@@ -2245,24 +2895,25 @@ def user_credentials():
     }
     
     for user in users:
-        if user['is_active']:
-            full_name = f"{user['first_name']} {user['last_name']}"
-            roles[user['role']].append((user['username'], user['email'], full_name, user.get('created_at', 'Unknown')))
+        full_name = f"{user['first_name']} {user['last_name']}"
+        status_badge = 'bg-success' if user['approval_status'] == APPROVED else ('bg-warning' if user['approval_status'] == PENDING else 'bg-danger')
+        roles[user['role']].append((user['username'], user['email'], full_name, user['approval_status'], user.get('created_at', 'Unknown'), status_badge))
     
     for role, users_list in roles.items():
         if users_list:
             credentials_html += f'''
                         <tr class="table-{'primary' if role=='admin' else 'info' if role=='doctor' else 'warning' if role=='nurse' else 'success'}">
-                            <td colspan="5"><strong>{role.upper()}S</strong></td>
+                            <td colspan="6"><strong>{role.upper()}S</strong></td>
                         </tr>
             '''
-            for username, email, full_name, created_at in users_list:
+            for username, email, full_name, status, created_at, status_badge in users_list:
                 credentials_html += f'''
                         <tr>
                             <td>{role.title()}</td>
                             <td><code>{username}</code></td>
                             <td>{email}</td>
                             <td>{full_name}</td>
+                            <td><span class="badge {status_badge}">{status.title()}</span></td>
                             <td>{created_at}</td>
                         </tr>
                 '''
@@ -2290,43 +2941,37 @@ def debug_data():
         'medical_records_count': len(medical_records),
         'consent_records_count': len(consent_records),
         'prescriptions_count': len(prescriptions),
+        'pending_approvals_count': len(pending_approvals),
         'users': users,
         'patients': patients,
         'appointments': appointments,
         'medical_records': medical_records,
         'consent_records': consent_records,
-        'prescriptions': prescriptions
+        'prescriptions': prescriptions,
+        'pending_approvals': pending_approvals
     }
     
     return jsonify(data_summary)
 
 # ==================== START THE APPLICATION ====================
 def create_app():
-    print("🚀 Starting SecureHealth Lesotho Application...")
-    print("🔄 Initializing in-memory data storage...")
+    print("Starting SecureHealth Lesotho Application...")
+    print("Initializing in-memory data storage...")
     initialize_data()
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    print("🌐 Server running on http://localhost:5000")
-    print("\n🔐 Password Requirements:")
+    print("Server running on http://localhost:5000")
+    print("\nPassword Requirements:")
     print("   - At least 8 characters")
     print("   - At least one uppercase letter")
     print("   - At least one lowercase letter")
     print("   - At least one digit")
     print("   - At least one special character (!@#$%^&*(),.?\":{}|<>)")
-    print("\n👥 Available Users (username / password):")
-    print("   👑 Admin: admin / Admin123!")
-    print("   👑 Admin: sysadmin / Admin456!")
-    print("   👨‍⚕️  Doctor: dr_thabo / Doctor123!")
-    print("   👨‍⚕️  Doctor: dr_masechaba / Doctor456!")
-    print("   👨‍⚕️  Doctor: dr_sefako / Doctor789!")
-    print("   👩‍⚕️  Nurse: nurse_mpho / Nurse123!")
-    print("   👩‍⚕️  Nurse: nurse_lineo / Nurse456!")
-    print("   👤 Patient: patient_tlali / Patient123!")
-    print("   👤 Patient: patient_lerato / Patient456!")
-    print("   👤 Patient: patient_thabiso / Patient789!")
-    print("\n🔗 Open your browser and go to: http://localhost:5000")
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    print("\nAdmin Login Credentials:")
+    print("   Admin 1: adminmaster / AdminMaster2024!")
+    print("   Admin 2: superadmin / SuperAdmin2024!")
+    print("\nOpen your browser and go to: http://localhost:5000")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
